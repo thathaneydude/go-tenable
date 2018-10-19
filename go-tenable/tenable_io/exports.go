@@ -71,7 +71,8 @@ func (export *Export) RequestStatus() string {
 }
 
 func (export *Export) DownloadChunk(ChunkID int) AssetChunkDownloadResponse {
-	fullUrl := fmt.Sprintf("%v/%v/export/%v/chunks/%v", export.tioClient.basePath, export.ExportType, export.ExportUUID, ChunkID)
+	fullUrl := fmt.Sprintf("%v/%v/export/%v/chunks/%v", export.tioClient.basePath, export.ExportType,
+		export.ExportUUID, ChunkID)
 	log.Printf("Requesting Chunk: %v\n", fullUrl)
 	req, err := http.NewRequest("GET", fullUrl, nil)
 	if err != nil {
@@ -96,16 +97,10 @@ type Export struct {
 	tioClient       TenableIOClient
 }
 
-func (tio TenableIOClient) NewAssetExport() Export {
+func (tio TenableIOClient) NewExport(exportType string) Export {
 	var ret = Export{}
-	ret.ExportType = "assets"
+	ret.ExportType = exportType
 	ret.tioClient = tio
-	return ret
-}
-
-func NewVulnExport() Export {
-	var ret = Export{}
-	ret.ExportType = "vulns"
 	return ret
 }
 
@@ -118,74 +113,70 @@ type ExportStatusResponse struct {
 	ChunksAvailable []int  `json:"chunks_available"`
 }
 
-//type VulnerabilityChunkDownloadResponse struct {
-//
-//}
-
 type AssetChunkDownloadResponse []struct {
-	ID                        string        `json:"id"`
-	HasAgent                  bool          `json:"has_agent"`
-	HasPluginResults          bool          `json:"has_plugin_results"`
-	CreatedAt                 time.Time     `json:"created_at"`
-	TerminatedAt              interface{}   `json:"terminated_at"`
-	TerminatedBy              interface{}   `json:"terminated_by"`
-	UpdatedAt                 time.Time     `json:"updated_at"`
-	DeletedAt                 interface{}   `json:"deleted_at"`
-	DeletedBy                 interface{}   `json:"deleted_by"`
-	FirstSeen                 time.Time     `json:"first_seen"`
-	LastSeen                  time.Time     `json:"last_seen"`
-	FirstScanTime             time.Time     `json:"first_scan_time"`
-	LastScanTime              time.Time     `json:"last_scan_time"`
-	LastAuthenticatedScanDate time.Time     `json:"last_authenticated_scan_date"`
-	LastLicensedScanDate      time.Time     `json:"last_licensed_scan_date"`
-	AzureVMID                 interface{}   `json:"azure_vm_id"`
-	AzureResourceID           interface{}   `json:"azure_resource_id"`
-	AwsEc2InstanceAmiID       interface{}   `json:"aws_ec2_instance_ami_id"`
-	AwsEc2InstanceID          interface{}   `json:"aws_ec2_instance_id"`
-	AgentUUID                 string        `json:"agent_uuid"`
-	BiosUUID                  string        `json:"bios_uuid"`
-	EnvironmentID             interface{}   `json:"environment_id"`
-	AwsOwnerID                interface{}   `json:"aws_owner_id"`
-	AwsAvailabilityZone       interface{}   `json:"aws_availability_zone"`
-	AwsRegion                 interface{}   `json:"aws_region"`
-	AwsVpcID                  interface{}   `json:"aws_vpc_id"`
-	AwsEc2InstanceGroupName   interface{}   `json:"aws_ec2_instance_group_name"`
-	AwsEc2InstanceStateName   interface{}   `json:"aws_ec2_instance_state_name"`
-	AwsEc2InstanceType        interface{}   `json:"aws_ec2_instance_type"`
-	AwsSubnetID               interface{}   `json:"aws_subnet_id"`
-	AwsEc2ProductCode         interface{}   `json:"aws_ec2_product_code"`
-	AwsEc2Name                interface{}   `json:"aws_ec2_name"`
-	McafeeEpoGUID             interface{}   `json:"mcafee_epo_guid"`
-	McafeeEpoAgentGUID        interface{}   `json:"mcafee_epo_agent_guid"`
-	ServicenowSysid           interface{}   `json:"servicenow_sysid"`
-	AgentNames                []string      `json:"agent_names"`
-	Ipv4S                     []string      `json:"ipv4s"`
-	Ipv6S                     []string      `json:"ipv6s"`
-	Fqdns                     []string      `json:"fqdns"`
-	MacAddresses              []string      `json:"mac_addresses"`
-	NetbiosNames              []interface{} `json:"netbios_names"`
-	OperatingSystems          []string      `json:"operating_systems"`
-	SystemTypes               []string      `json:"system_types"`
-	Hostnames                 []string      `json:"hostnames"`
-	SSHFingerprints           []interface{} `json:"ssh_fingerprints"`
-	QualysAssetIds            []interface{} `json:"qualys_asset_ids"`
-	QualysHostIds             []interface{} `json:"qualys_host_ids"`
-	ManufacturerTpmIds        []interface{} `json:"manufacturer_tpm_ids"`
-	SymantecEpHardwareKeys    []interface{} `json:"symantec_ep_hardware_keys"`
+	ID                        string    `json:"id,omitempty"`
+	HasAgent                  bool      `json:"has_agent,omitempty"`
+	HasPluginResults          bool      `json:"has_plugin_results,omitempty"`
+	CreatedAt                 time.Time `json:"created_at,omitempty"`
+	TerminatedAt              time.Time `json:"terminated_at,omitempty"`
+	TerminatedBy              time.Time `json:"terminated_by,omitempty"`
+	UpdatedAt                 time.Time `json:"updated_at,omitempty"`
+	DeletedAt                 time.Time `json:"deleted_at,omitempty"`
+	DeletedBy                 time.Time `json:"deleted_by,omitempty"`
+	FirstSeen                 time.Time `json:"first_seen,omitempty"`
+	LastSeen                  time.Time `json:"last_seen,omitempty"`
+	FirstScanTime             time.Time `json:"first_scan_time,omitempty"`
+	LastScanTime              time.Time `json:"last_scan_time,omitempty"`
+	LastAuthenticatedScanDate time.Time `json:"last_authenticated_scan_date,omitempty"`
+	LastLicensedScanDate      time.Time `json:"last_licensed_scan_date,omitempty"`
+	AzureVMID                 string    `json:"azure_vm_id,omitempty"`
+	AzureResourceID           string    `json:"azure_resource_id,omitempty"`
+	AwsEc2InstanceAmiID       string    `json:"aws_ec2_instance_ami_id,omitempty"`
+	AwsEc2InstanceID          string    `json:"aws_ec2_instance_id,omitempty"`
+	AgentUUID                 string    `json:"agent_uuid,omitempty"`
+	BiosUUID                  string    `json:"bios_uuid,omitempty"`
+	EnvironmentID             string    `json:"environment_id,omitempty"`
+	AwsOwnerID                string    `json:"aws_owner_id,omitempty"`
+	AwsAvailabilityZone       string    `json:"aws_availability_zone,omitempty"`
+	AwsRegion                 string    `json:"aws_region,omitempty"`
+	AwsVpcID                  string    `json:"aws_vpc_id,omitempty"`
+	AwsEc2InstanceGroupName   string    `json:"aws_ec2_instance_group_name,omitempty"`
+	AwsEc2InstanceStateName   string    `json:"aws_ec2_instance_state_name,omitempty"`
+	AwsEc2InstanceType        string    `json:"aws_ec2_instance_type,omitempty"`
+	AwsSubnetID               string    `json:"aws_subnet_id,omitempty"`
+	AwsEc2ProductCode         string    `json:"aws_ec2_product_code,omitempty"`
+	AwsEc2Name                string    `json:"aws_ec2_name,omitempty"`
+	McafeeEpoGUID             string    `json:"mcafee_epo_guid,omitempty"`
+	McafeeEpoAgentGUID        string    `json:"mcafee_epo_agent_guid,omitempty"`
+	ServicenowSysid           string    `json:"servicenow_sysid,omitempty"`
+	AgentNames                []string  `json:"agent_names,omitempty"`
+	Ipv4S                     []string  `json:"ipv4s,omitempty"`
+	Ipv6S                     []string  `json:"ipv6s,omitempty"`
+	Fqdns                     []string  `json:"fqdns,omitempty"`
+	MacAddresses              []string  `json:"mac_addresses,omitempty"`
+	NetbiosNames              []string  `json:"netbios_names,omitempty"`
+	OperatingSystems          []string  `json:"operating_systems,omitempty"`
+	SystemTypes               []string  `json:"system_types,omitempty"`
+	Hostnames                 []string  `json:"hostnames,omitempty"`
+	SSHFingerprints           []string  `json:"ssh_fingerprints,omitempty"`
+	QualysAssetIds            []string  `json:"qualys_asset_ids,omitempty"`
+	QualysHostIds             []string  `json:"qualys_host_ids,omitempty"`
+	ManufacturerTpmIds        []string  `json:"manufacturer_tpm_ids,omitempty"`
+	SymantecEpHardwareKeys    []string  `json:"symantec_ep_hardware_keys,omitempty"`
 	Sources                   []struct {
-		Name      string    `json:"name"`
-		FirstSeen time.Time `json:"first_seen"`
-		LastSeen  time.Time `json:"last_seen"`
-	} `json:"sources"`
-	Tags              []interface{} `json:"tags"`
+		Name      string    `json:"name,omitempty"`
+		FirstSeen time.Time `json:"first_seen,omitempty"`
+		LastSeen  time.Time `json:"last_seen,omitempty"`
+	} `json:"sources,omitempty"`
+	Tags              []string `json:"tags,omitempty"`
 	NetworkInterfaces []struct {
-		Name         string        `json:"name"`
-		Virtual      interface{}   `json:"virtual"`
-		Aliased      bool          `json:"aliased"`
-		Fqdns        []interface{} `json:"fqdns"`
-		MacAddresses []string      `json:"mac_addresses"`
-		Ipv4S        []string      `json:"ipv4s"`
-		Ipv6S        []string      `json:"ipv6s"`
+		Name         string   `json:"name,omitempty"`
+		Virtual      bool     `json:"virtual,omitempty"`
+		Aliased      bool     `json:"aliased,omitempty"`
+		Fqdns        []string `json:"fqdns,omitempty"`
+		MacAddresses []string `json:"mac_addresses,omitempty"`
+		Ipv4S        []string `json:"ipv4s,omitempty"`
+		Ipv6S        []string `json:"ipv6s,omitempty"`
 	} `json:"network_interfaces"`
 }
 
