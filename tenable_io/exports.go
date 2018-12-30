@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/thathaneydude/go-tenable"
 	"io/ioutil"
 	"log"
 	"net/http"

@@ -1,4 +1,4 @@
-package tenable_io
+package go_tenable
 
 import (
 	"bytes"
