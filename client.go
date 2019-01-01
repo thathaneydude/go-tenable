@@ -39,10 +39,10 @@ func (tio *TenableIOClient) Do(req *http.Request) http.Response {
 	req.Header.Set("X-ApiKeys", fmt.Sprintf("accessKey=%v; secretKey=%v;", tio.accessKey, tio.secretKey))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", "GoTenable")
-	fmt.Printf("Requesting \"%v\": %v\n", req.URL, req.Body)
+	log.Printf("Requesting \"%v\": %v\n", req.URL, req.Body)
 	resp, err := tio.client.Do(req)
 	if err != nil {
-		fmt.Printf("Unable to run request: %v\n", err)
+		log.Printf("Unable to run request: %v\n", err)
 	}
 
 	return *resp
