@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 )
 
-func (sc TenableSCClient) listAssets() AssetResponse {
+func (sc *TenableSCClient) ListAssets() AssetResponse {
 	req, err := sc.NewRequest("GET", "asset", nil)
 	if err != nil {
 		fmt.Printf("Unable to list Assets: %v", err)
