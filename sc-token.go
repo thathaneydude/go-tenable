@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func (sc *TenableSCClient) login(scUser string, scPassword string) {
+func (sc TenableSCClient) login(scUser string, scPassword string) {
 	// Make POST request to SC and store token returned in headers
 	payload, err := json.Marshal(&TokenRequest{Username: scUser, Password: scPassword})
 	if err != nil {
@@ -36,7 +36,7 @@ func (sc *TenableSCClient) login(scUser string, scPassword string) {
 
 }
 
-func (sc *TenableSCClient) logout() {
+func (sc TenableSCClient) logout() {
 	req, err := sc.NewRequest("DELETE", "token", nil)
 	if err != nil {
 		fmt.Printf("Unable to log out of Tenable.SC: %v\n", err)
