@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (tio TenableIOClient) ListAgents() []AgentResponse {
+func (tio *TenableIOClient) ListAgents() []AgentResponse {
 	fmt.Printf("Fetching all agent information from Tenable.io\n")
 	var agentResponses []AgentResponse
 	const limit = 5000
@@ -27,7 +27,7 @@ func (tio TenableIOClient) ListAgents() []AgentResponse {
 	return agentResponses
 }
 
-func fetchAgentBatch(tio TenableIOClient, limit int, offset int) AgentResponse {
+func fetchAgentBatch(tio *TenableIOClient, limit int, offset int) AgentResponse {
 	fmt.Printf("* Fetching agents [%v - %v]\n", offset, offset+limit)
 	fullUrl := fmt.Sprintf("%v/scanners/tenable/agents?offset=%v&limit=%v", tio.basePath, offset, limit)
 	req, err := http.NewRequest("GET", fullUrl, nil)
