@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 )
 
-func (sc *TenableSCClient) listRiskAcceptanceRules() AcceptRiskRuleResponse {
+func (sc TenableSCClient) listRiskAcceptanceRules() AcceptRiskRuleResponse {
 	var params = "id,repository,organization,user,plugin,hostType,hostValue,port,protocol,expires,status,comments," +
 		"createdTime,modifiedTime"
 	req, err := sc.NewRequest("GET", fmt.Sprintf("acceptRiskRule?fields=%v", params), nil)

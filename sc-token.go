@@ -8,6 +8,7 @@ import (
 )
 
 func (sc *TenableSCClient) Login(scUser string, scPassword string) {
+
 	// Make POST request to SC and store token returned in headers
 	payload, err := json.Marshal(&TokenRequest{Username: scUser, Password: scPassword})
 	if err != nil {
