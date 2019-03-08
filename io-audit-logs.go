@@ -3,7 +3,6 @@ package go_tenable
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"time"
 )
@@ -28,7 +27,7 @@ func (tio *TenableIOClient) ListEvents(filter EventFilter) ([]Event, IOError) {
 	// Unmarshal API response to AuditLogResponse struct
 	responseError := json.Unmarshal(ResponseBytes, &Logs)
 	if responseError != nil {
-		log.Error("Unable to unmarshal Audit Log Response: %v\n", responseError)
+		fmt.Printf("Unable to unmarshal Audit Log Response: %v\n", responseError)
 	}
 
 	return Logs.Events, funcError
