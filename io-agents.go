@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
+	"log"
 )
 
 func (tio *TenableIOClient) ListAgents() []AgentResponse {
-	fmt.Printf("Fetching all agent information from Tenable.io\n")
+	log.Printf("Fetching all agent information from Tenable.io\n")
 	var agentResponses []AgentResponse
 	const limit = 5000
 	offset := 0
@@ -28,19 +28,10 @@ func (tio *TenableIOClient) ListAgents() []AgentResponse {
 }
 
 func fetchAgentBatch(tio *TenableIOClient, limit int, offset int) AgentResponse {
-	fmt.Printf("* Fetching agents [%v - %v]\n", offset, offset+limit)
-	fullUrl := fmt.Sprintf("%v/scanners/tenable/agents?offset=%v&limit=%v", tio.basePath, offset, limit)
-	req, err := http.NewRequest("GET", fullUrl, nil)
-	if err != nil {
-		fmt.Printf("Unable to build agent list request: %v", err)
-	}
-	req.Header.Set("X-ApiKeys", fmt.Sprintf("accessKey=%v; secretKey=%v;", tio.accessKey, tio.secretKey))
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := tio.client.Do(req)
-	if err != nil {
-		fmt.Printf("Unable to request agent list from tenable.io: %v", err)
-	}
-
+	log.Printf("* Fetching agents [%v - %v]\n", offset, offset+limit)
+	fullUrl := fmt.Sprintf("scanners/tenable/agents?offset=%v&limit=%v", offset, limit)
+	req := tio.NewRequest("GET", fullUrl, nil)
+	resp := tio.Do(req)
 	tmp, _ := ioutil.ReadAll(resp.Body)
 	var agentResponse AgentResponse
 	unmarshalError := json.Unmarshal(tmp, &agentResponse)

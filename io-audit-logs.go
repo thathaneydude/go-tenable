@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"time"
 )
 
@@ -27,7 +28,7 @@ func (tio *TenableIOClient) ListEvents(filter EventFilter) ([]Event, IOError) {
 	// Unmarshal API response to AuditLogResponse struct
 	responseError := json.Unmarshal(ResponseBytes, &Logs)
 	if responseError != nil {
-		fmt.Printf("Unable to unmarshal Audit Log Response: %v\n", responseError)
+		log.Printf("Unable to unmarshal Audit Log Response: %v\n", responseError)
 	}
 
 	return Logs.Events, funcError
