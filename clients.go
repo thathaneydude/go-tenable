@@ -134,7 +134,7 @@ func (tio *TenableIOClient) Do(req *http.Request) http.Response {
 }
 
 func (tio *TenableIOClient) NewRequest(method string, endpoint string, body []byte) *http.Request {
-	fullUrl := fmt.Sprintf("%v/%v", tenableIOBasePath, endpoint)
+	fullUrl := fmt.Sprintf("%v/%v", tio.basePath, endpoint)
 	req, err := http.NewRequest(method, fullUrl, bytes.NewBuffer(body))
 	if err != nil {
 		log.Printf("Unable to build request [%v] %v request\n", method, endpoint)
