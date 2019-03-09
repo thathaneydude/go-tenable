@@ -2,26 +2,23 @@ package go_tenable
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
+	"log"
 )
 
 func (sc *TenableSCClient) ListAssets() AssetResponse {
-	req, err := sc.NewRequest("GET", "asset", nil)
-	if err != nil {
-		fmt.Printf("Unable to list Assets: %v", err)
-	}
 
-	resp, err := sc.Do(req)
+	req := sc.NewRequest("GET", "asset", nil)
+	resp := sc.Do(req)
 	tmp, _ := ioutil.ReadAll(resp.Body)
-	var Assets = AssetResponse{}
-	err = json.Unmarshal(tmp, &Assets)
+	var assetResponse = AssetResponse{}
+	err := json.Unmarshal(tmp, &assetResponse)
 
 	if err != nil {
-		fmt.Printf("Unable to unmarshal Asset Response: %v", err)
+		log.Printf("Unable to unmarshal Asset Response: %v", err)
 	}
 
-	return Assets
+	return assetResponse
 
 }
 

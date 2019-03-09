@@ -1,18 +1,16 @@
 package go_tenable
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"time"
 )
 
-func (export *Export) GetUnprocessedChunks() []int {
+func (export *Export) getUnprocessedChunks() []int {
 	var UnprocessedChunks []int
-	fmt.Printf("Chunks Available: %v ; Chunks Processed: %v\n", export.AvailableChunks, export.ProcessedChunks)
+	log.Printf("Chunks Available: %v ; Chunks Processed: %v\n", export.AvailableChunks, export.ProcessedChunks)
 	for _, chunkId := range export.AvailableChunks {
 		if !intInSlice(chunkId, export.ProcessedChunks) {
 			UnprocessedChunks = append(UnprocessedChunks, chunkId)
@@ -30,58 +28,48 @@ func intInSlice(a int, list []int) bool {
 	return false
 }
 
-func (export *Export) RequestExport(Payload []byte) string {
-	fullUrl := fmt.Sprintf("%v/%v/export", export.tioClient.basePath, export.ExportType)
-	req, err := http.NewRequest("POST", fullUrl, bytes.NewBuffer(Payload))
-	if err != nil {
-		fmt.Printf("Unable to build %v export request: %v\n", export.ExportType, err)
-	}
+func (export *Export) RequestAssetExport(body AssetRequestBody) string {
+	fullUrl := fmt.Sprintf("%v/export", export.ExportType)
+	req := export.tioClient.NewRequest("POST", fullUrl, body.ToBytes())
 	resp := export.tioClient.Do(req)
 
 	tmp, _ := ioutil.ReadAll(resp.Body)
 
 	var exportRequestRes ExportRequestResponse
-	err = json.Unmarshal(tmp, &exportRequestRes)
+	err := json.Unmarshal(tmp, &exportRequestRes)
 	if err != nil {
-		fmt.Printf("Unable to read response from %v export: %v\n", export.ExportType, err)
+		log.Printf("Unable to read response from %v export: %v\n", export.ExportType, err)
 	}
-	fmt.Printf("Export Response [%v]: %v \n", resp.StatusCode, exportRequestRes)
+	log.Printf("Export Response [%v]: %v \n", resp.StatusCode, exportRequestRes)
 	export.ExportUUID = exportRequestRes.ExportUUID
 	return exportRequestRes.ExportUUID
 }
 
 func (export *Export) RequestStatus() string {
-	fullUrl := fmt.Sprintf("%v/%v/export/%v/status", export.tioClient.basePath, export.ExportType, export.ExportUUID)
-	fmt.Printf("Requesting Status: %v\n", fullUrl)
-	req, err := http.NewRequest("GET", fullUrl, nil)
-	if err != nil {
-		fmt.Printf("Unable to check status for export %v: %v\n", export.ExportUUID, err)
-	}
+	fullUrl := fmt.Sprintf("%v/export/%v/status", export.ExportType, export.ExportUUID)
+	log.Printf("Requesting Status: %v\n", fullUrl)
+	req := export.tioClient.NewRequest("GET", fullUrl, nil)
 	resp := export.tioClient.Do(req)
 	tmp, _ := ioutil.ReadAll(resp.Body)
 	var statusRes = ExportStatusResponse{}
-	err = json.Unmarshal(tmp, &statusRes)
+	err := json.Unmarshal(tmp, &statusRes)
 	if err != nil {
-		fmt.Printf("Unable to unmarshal status response: %v", err)
+		log.Printf("Unable to unmarshal status response: %v", err)
 	}
 	export.ExportStatus = statusRes.Status
 	export.AvailableChunks = statusRes.ChunksAvailable
-	fmt.Printf("Export Status: %v\n", export.ExportStatus)
+	log.Printf("Export Status: %v\n", export.ExportStatus)
 	return export.ExportStatus
 }
 
-func (export *Export) DownloadChunk(ChunkID int) AssetChunkDownloadResponse {
-	fullUrl := fmt.Sprintf("%v/%v/export/%v/chunks/%v", export.tioClient.basePath, export.ExportType,
-		export.ExportUUID, ChunkID)
+func (export *Export) DownloadAssetChunk(ChunkID int) AssetChunkDownloadResponse {
+	fullUrl := fmt.Sprintf("%v/export/%v/chunks/%v", export.ExportType, export.ExportUUID, ChunkID)
 	log.Printf("Requesting Chunk: %v\n", fullUrl)
-	req, err := http.NewRequest("GET", fullUrl, nil)
-	if err != nil {
-		log.Printf("Unable to download chunk %v: %v\n", ChunkID, err)
-	}
+	req := export.tioClient.NewRequest("GET", fullUrl, nil)
 	resp := export.tioClient.Do(req)
 	tmp, _ := ioutil.ReadAll(resp.Body)
 	var ChunkResponse = AssetChunkDownloadResponse{}
-	err = json.Unmarshal(tmp, &ChunkResponse)
+	err := json.Unmarshal(tmp, &ChunkResponse)
 	if err != nil {
 		log.Printf("Unable to unmarshal asset chunk: %v", err)
 	}
@@ -97,9 +85,9 @@ type Export struct {
 	tioClient       TenableIOClient
 }
 
-func (tio TenableIOClient) NewExport(exportType string) Export {
+func (tio TenableIOClient) NewAssetExport() Export {
 	var ret = Export{}
-	ret.ExportType = exportType
+	ret.ExportType = "assets"
 	ret.tioClient = tio
 	return ret
 }
@@ -131,10 +119,15 @@ type AssetChunkDownloadResponse []struct {
 	LastLicensedScanDate      time.Time `json:"last_licensed_scan_date,omitempty"`
 	AzureVMID                 string    `json:"azure_vm_id,omitempty"`
 	AzureResourceID           string    `json:"azure_resource_id,omitempty"`
+	GCPProjectID              string    `json:"gcp_project_id, omitempty"`
+	GCPZone                   string    `json:"gcp_zone, omitempty"`
+	GCPInstanceID             string    `json:"gcp_instance_id, omitempty"`
 	AwsEc2InstanceAmiID       string    `json:"aws_ec2_instance_ami_id,omitempty"`
 	AwsEc2InstanceID          string    `json:"aws_ec2_instance_id,omitempty"`
 	AgentUUID                 string    `json:"agent_uuid,omitempty"`
 	BiosUUID                  string    `json:"bios_uuid,omitempty"`
+	NetworkID                 string    `json:"network_id"`
+	NetworkName               string    `json:"network_name"`
 	EnvironmentID             string    `json:"environment_id,omitempty"`
 	AwsOwnerID                string    `json:"aws_owner_id,omitempty"`
 	AwsAvailabilityZone       string    `json:"aws_availability_zone,omitempty"`
@@ -168,7 +161,13 @@ type AssetChunkDownloadResponse []struct {
 		FirstSeen time.Time `json:"first_seen,omitempty"`
 		LastSeen  time.Time `json:"last_seen,omitempty"`
 	} `json:"sources,omitempty"`
-	Tags              []string `json:"tags,omitempty"`
+	Tags []struct {
+		UUID    string    `json:"uuid,omitempty"`
+		Key     string    `json:"key,omitempty"`
+		Value   string    `json:"value,omitempty"`
+		AddedBy string    `json:"added_by,omitempty"`
+		AddedAt time.Time `json:"added_at,omitempty"`
+	} `json:"tags,omitempty"`
 	NetworkInterfaces []struct {
 		Name         string   `json:"name,omitempty"`
 		Virtual      bool     `json:"virtual,omitempty"`
@@ -177,7 +176,7 @@ type AssetChunkDownloadResponse []struct {
 		MacAddresses []string `json:"mac_addresses,omitempty"`
 		Ipv4S        []string `json:"ipv4s,omitempty"`
 		Ipv6S        []string `json:"ipv6s,omitempty"`
-	} `json:"network_interfaces"`
+	} `json:"network_interfaces,omitempty"`
 }
 
 type AssetRequestBody struct {

@@ -4,22 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 )
 
 func (sc *TenableSCClient) ListRiskRecastRules() RecastRiskRuleResponse {
 	var params = "id,repository,organization,user,plugin,newSeverity,hostType,hostValue,port,protocol,order,status," +
 		"comments,createdTime,modifiedTime"
-	req, err := sc.NewRequest("GET", fmt.Sprintf("recastRiskRule?fields=%v", params), nil)
-	if err != nil {
-		fmt.Printf("Unable to request Risk Recast Rules: %v\n", err)
-	}
-	resp, err := sc.Do(req)
+	req := sc.NewRequest("GET", fmt.Sprintf("recastRiskRule?fields=%v", params), nil)
+	resp := sc.Do(req)
 	tmp, _ := ioutil.ReadAll(resp.Body)
 	var Rules = RecastRiskRuleResponse{}
-	err = json.Unmarshal(tmp, &Rules)
+	err := json.Unmarshal(tmp, &Rules)
 
 	if err != nil {
-		fmt.Printf("Unable to unmarshal Risk Recast Rules: %v\n", err)
+		log.Printf("Unable to unmarshal Risk Recast Rules: %v\n", err)
 	}
 
 	return Rules
