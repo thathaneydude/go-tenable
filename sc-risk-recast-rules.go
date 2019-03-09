@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 )
 
-func (sc TenableSCClient) listRiskRecastRules() RecastRiskRuleResponse {
+func (sc *TenableSCClient) ListRiskRecastRules() RecastRiskRuleResponse {
 	var params = "id,repository,organization,user,plugin,newSeverity,hostType,hostValue,port,protocol,order,status," +
 		"comments,createdTime,modifiedTime"
 	req, err := sc.NewRequest("GET", fmt.Sprintf("recastRiskRule?fields=%v", params), nil)
