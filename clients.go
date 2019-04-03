@@ -5,20 +5,21 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+        "time"
 )
 
 // Public Functions
 
 func NewTenableSCClient(scHost string, transport *http.Transport) TenableSCClient {
 	sc := &TenableSCClient{
-		client:  &http.Client{Transport: transport},
+		client:  &http.Client{Transport: transport, Timeout: 10 * time.Second,},
 		baseURL: fmt.Sprintf("https://%v/rest", scHost),
 	}
 	return *sc
 }
 
 func NewTenableIOClient(accessKey string, secretKey string, transport *http.Transport) TenableIOClient {
-	client := &http.Client{Transport: transport}
+	client := &http.Client{Transport: transport, Timeout: 10 * time.Second,}
 
 	tio := &TenableIOClient{
 		client,
@@ -30,7 +31,7 @@ func NewTenableIOClient(accessKey string, secretKey string, transport *http.Tran
 }
 
 func NewNessusClient(accessKey string, secretKey string, nessusAddress string, port int, transport *http.Transport) NessusClient {
-	client := &http.Client{Transport: transport}
+	client := &http.Client{Transport: transport, Timeout: 10 * time.Second,}
 
 	nessus := &NessusClient{
 		client,
