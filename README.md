@@ -27,7 +27,7 @@ func main() {
 	transport :=  &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	scClient := go_tenable.NewTenableSCClient("sc-address", transport)
+	scClient := go_tenable.NewTenableSCClient("sc-console.example.com", transport)
 	scClient.Login("sc-user", "sc-password")
 	for _, asset := range scClient.ListAssets().Response.Usable {
 		fmt.Printf("Asset %v (%v): %v\n", asset.Name, asset.ID, asset.Type)
@@ -53,11 +53,12 @@ func main(){
 	transport :=  &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
+
 	tio := go_tenable.NewTenableIOClient("access-key", "secret-key", transport)
 
 	var Payload = go_tenable.AssetRequestBody{ChunkSize: 10000}
-	export := tio.NewAssetExport()
-	export.RequestAssetExport(Payload)
+	export := tio.NewExport("assets")
+	export.RequestExport(Payload.ToBytes())
 	for {
 		status := export.RequestStatus()
 		if status != "FINISHED" {
@@ -67,8 +68,8 @@ func main(){
 		}
 	}
 
-	for _, asset := range export.DownloadAssetChunk(1) {
-		fmt.Printf("Asset %v IPs: %v\n", asset.ID, asset.Ipv4S)
+	for _, asset := range export.DownloadChunk(1) {
+		fmt.Printf("Asset %v IPs: %v\n", asset.ID, asset.Ipv4s)
 	}
 }
 ```
@@ -88,15 +89,21 @@ func main(){
 	transport :=  &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	var nessusScanner = "nessus-address"
-	nessusClient := go_tenable.NewNessusClient("access-key", "secret-key", nessusScanner, 8834, transport)
+	nessusClient := go_tenable.NewNessusClient(
+		"access-key",
+		"secret-key",
+		"nessus-address.example.com",
+		8834,
+		transport)
 	status := nessusClient.GetStatus()
 	properties := nessusClient.GetProperties()
-	fmt.Printf("Scanner %v\n", nessusScanner)
+	health := nessusClient.GetHealthStats(1)
+	fmt.Printf("Scanner %v\n", nessusClient.Address)
 	fmt.Printf("-Status: %v\n", status.Status)
 	fmt.Printf("-Version: %v\n", properties.ServerVersion)
 	fmt.Printf("-Licensed IP Count: %v\n", properties.License.Ips)
 	fmt.Printf("-Licensed Expiration: %v\n", properties.License.ExpirationDate)
+	fmt.Printf("-Free Disk: %v\n", health.PerfStatsCurrent.NessusDataDiskFree)
 }
 ```
 ## Authors

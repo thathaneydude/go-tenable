@@ -6,19 +6,17 @@ import (
 	"log"
 )
 
-func (sc *TenableSCClient) ListAssets() AssetResponse {
-
-	req := sc.NewRequest("GET", "asset", nil)
-	resp := sc.Do(req)
+func (sc *TenableSC) ListAssets() AssetResponse {
+	resp, err := sc.Get("asset", "")
 	tmp, _ := ioutil.ReadAll(resp.Body)
-	var assetResponse = AssetResponse{}
-	err := json.Unmarshal(tmp, &assetResponse)
+	var Assets = AssetResponse{}
+	err = json.Unmarshal(tmp, &Assets)
 
 	if err != nil {
 		log.Printf("Unable to unmarshal Asset Response: %v", err)
 	}
 
-	return assetResponse
+	return Assets
 
 }
 

@@ -2,19 +2,18 @@ package go_tenable
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 )
 
-func (sc *TenableSCClient) ListRiskRecastRules() RecastRiskRuleResponse {
-	var params = "id,repository,organization,user,plugin,newSeverity,hostType,hostValue,port,protocol,order,status," +
+func (sc *TenableSC) ListRiskRecastRules() RecastRiskRuleResponse {
+	var params = "id,repository,organization,User,plugin,newSeverity,hostType,hostValue,Port,protocol,order,status," +
 		"comments,createdTime,modifiedTime"
-	req := sc.NewRequest("GET", fmt.Sprintf("recastRiskRule?fields=%v", params), nil)
-	resp := sc.Do(req)
+
+	resp, err := sc.Get("recastRiskRule", params)
 	tmp, _ := ioutil.ReadAll(resp.Body)
 	var Rules = RecastRiskRuleResponse{}
-	err := json.Unmarshal(tmp, &Rules)
+	err = json.Unmarshal(tmp, &Rules)
 
 	if err != nil {
 		log.Printf("Unable to unmarshal Risk Recast Rules: %v\n", err)
@@ -35,7 +34,7 @@ type RecastRiskRuleResponse struct {
 type RecastRiskRule struct {
 	HostValue   interface{} `json:"hostValue,omitempty"`
 	HostType    string      `json:"hostType"`
-	Port        string      `json:"port,omitempty"`
+	Port        string      `json:"Port,omitempty"`
 	Protocol    string      `json:"protocol,omitempty"`
 	NewSeverity string      `json:"newSeverity"`
 	CreatedTime string      `json:"createdTime"`
@@ -58,5 +57,5 @@ type RecastRiskRule struct {
 		Username  string `json:"username"`
 		Firstname string `json:"firstname,omitempty"`
 		Lastname  string `json:"lastname,omitempty"`
-	} `json:"user"`
+	} `json:"User"`
 }

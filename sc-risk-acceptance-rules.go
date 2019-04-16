@@ -4,20 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 )
 
-func (sc *TenableSCClient) ListRiskAcceptanceRules() AcceptRiskRuleResponse {
-	var params = "id,repository,organization,user,plugin,hostType,hostValue,port,protocol,expires,status,comments," +
+func (sc *TenableSC) ListRiskAcceptanceRules() AcceptRiskRuleResponse {
+	var params = "id,repository,organization,User,plugin,hostType,hostValue,Port,protocol,expires,status,comments," +
 		"createdTime,modifiedTime"
-	req := sc.NewRequest("GET", fmt.Sprintf("acceptRiskRule?fields=%v", params), nil)
-	resp := sc.Do(req)
+	resp, err := sc.Get("acceptRiskRule", params)
 	tmp, _ := ioutil.ReadAll(resp.Body)
 	var Rules = AcceptRiskRuleResponse{}
-	err := json.Unmarshal(tmp, &Rules)
+	err = json.Unmarshal(tmp, &Rules)
 
 	if err != nil {
-		log.Printf("Unable to unmarshal Risk Acceptance Rules: %v\n", err)
+		fmt.Printf("Unable to unmarshal Risk Acceptance Rules: %v\n", err)
 	}
 
 	return Rules
@@ -35,7 +33,7 @@ type AcceptRiskRuleResponse struct {
 type AcceptRiskRule struct {
 	HostValue    interface{} `json:"hostValue,omitempty"`
 	HostType     string      `json:"hostType"`
-	Port         string      `json:"port,omitempty"`
+	Port         string      `json:"Port,omitempty"`
 	Protocol     string      `json:"protocol,omitempty"`
 	Expires      string      `json:"expires"`
 	CreatedTime  string      `json:"createdTime"`
@@ -58,5 +56,5 @@ type AcceptRiskRule struct {
 		Username  string `json:"username"`
 		Firstname string `json:"firstname,omitempty"`
 		Lastname  string `json:"lastname,omitempty"`
-	} `json:"user"`
+	} `json:"User"`
 }

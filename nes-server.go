@@ -7,30 +7,31 @@ import (
 )
 
 // Public Functions
-func (nessus *NessusClient) GetStatus() StatusResponse {
-	log.Printf("Fetching Nessus Scanner %v status\n", nessus.address)
+func (n *Nessus) GetStatus() StatusResponse {
 	var statusResponse StatusResponse
-
-	req := nessus.NewRequest("GET", "server/status", nil)
-	resp := nessus.Do(req)
+	resp, err := n.Get("server/status", "")
+	if err != nil {
+		log.Printf("Unable to fetch Nessus Scanner status: %v\n", err)
+	}
 	tmp, _ := ioutil.ReadAll(resp.Body)
 	unmarshalError := json.Unmarshal(tmp, &statusResponse)
 	if unmarshalError != nil {
-		log.Printf("Unable to unmarshal status response: %v", unmarshalError)
+		log.Printf("Unable to unmarshal status response: %v\n", unmarshalError)
 	}
 	return statusResponse
 }
 
-func (nessus *NessusClient) GetProperties() PropertiesResponse {
-	log.Printf("Fetching Nessus Scanner %v Properties", nessus.address)
+func (n *Nessus) GetProperties() PropertiesResponse {
 	var propertiesResponse PropertiesResponse
 
-	req := nessus.NewRequest("GET", "server/properties", nil)
-	resp := nessus.Do(req)
+	resp, err := n.Get("server/properties", "")
+	if err != nil {
+		log.Printf("Unable to fetch Nessus Scanner Properties: %v\n", err)
+	}
 	tmp, _ := ioutil.ReadAll(resp.Body)
 	unmarshalError := json.Unmarshal(tmp, &propertiesResponse)
 	if unmarshalError != nil {
-		log.Printf("Unable to unmarshal properties response: %v", unmarshalError)
+		log.Printf("Unable to unmarshal properties response: %v\n", unmarshalError)
 	}
 	return propertiesResponse
 }

@@ -7,14 +7,14 @@ import (
 	"log"
 )
 
-func (tio *TenableIOClient) ListAgents() []AgentResponse {
+func (io *TenableIO) ListAgents() []AgentResponse {
 	log.Printf("Fetching all agent information from Tenable.io\n")
 	var agentResponses []AgentResponse
 	const limit = 5000
 	offset := 0
 	for {
 
-		agentRes := fetchAgentBatch(tio, limit, offset)
+		agentRes := fetchAgentBatch(io, limit, offset)
 		if len(agentRes.Agents) > 0 {
 			agentResponses = append(agentResponses, agentRes)
 		}
@@ -27,16 +27,19 @@ func (tio *TenableIOClient) ListAgents() []AgentResponse {
 	return agentResponses
 }
 
-func fetchAgentBatch(tio *TenableIOClient, limit int, offset int) AgentResponse {
-	log.Printf("* Fetching agents [%v - %v]\n", offset, offset+limit)
-	fullUrl := fmt.Sprintf("scanners/tenable/agents?offset=%v&limit=%v", offset, limit)
-	req := tio.NewRequest("GET", fullUrl, nil)
-	resp := tio.Do(req)
+func fetchAgentBatch(io *TenableIO, limit int, offset int) AgentResponse {
+	log.Printf("Fetching agents [%v - %v]\n", offset, offset+limit)
+
+	resp, err := io.Get("scanners/1/agents",
+		fmt.Sprintf("offset=%v&limit=%v", offset, offset+limit))
+	if err != nil {
+		log.Printf("Unable to fetch Agent batch: %v\n", err)
+	}
 	tmp, _ := ioutil.ReadAll(resp.Body)
 	var agentResponse AgentResponse
 	unmarshalError := json.Unmarshal(tmp, &agentResponse)
 	if unmarshalError != nil {
-		fmt.Println("There was an error:", unmarshalError)
+		log.Printf("Error unmarshaling response: %v\n", unmarshalError)
 	}
 
 	return agentResponse

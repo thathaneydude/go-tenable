@@ -5,140 +5,333 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-        "time"
 )
 
-// Public Functions
+// Creating a New Clients
+func NewTenableIOClient(accessKey string, secretKey string, transport *http.Transport) TenableIO {
+	headers := &http.Header{}
+	headers.Set("X-ApiKeys", fmt.Sprintf("accessKey=%v; secretKey=%v;", accessKey, secretKey))
+	headers.Set("Content-Type", "application/json")
+	headers.Set("User-Agent", "GoTenable")
 
-func NewTenableSCClient(scHost string, transport *http.Transport) TenableSCClient {
-	sc := &TenableSCClient{
-		client:  &http.Client{Transport: transport, Timeout: 10 * time.Second,},
-		baseURL: fmt.Sprintf("https://%v/rest", scHost),
+	b := &BaseClient{
+		&http.Client{},
+		headers}
+
+	if transport != nil {
+		b.httpClient.Transport = transport
 	}
-	return *sc
-}
-
-func NewTenableIOClient(accessKey string, secretKey string, transport *http.Transport) TenableIOClient {
-	client := &http.Client{Transport: transport, Timeout: 10 * time.Second,}
-
-	tio := &TenableIOClient{
-		client,
-		"https://cloud.tenable.com",
+	client := TenableIO{
+		*b,
 		accessKey,
 		secretKey,
+		"https://cloud.tenable.com"}
+	return client
+}
+
+func NewTenableSCClient(scHost string, transport *http.Transport) TenableSC {
+	headers := &http.Header{}
+	headers.Set("Content-Type", "application/json")
+	headers.Set("User-Agent", "GoTenable")
+
+	b := &BaseClient{
+		&http.Client{},
+		headers}
+
+	if transport != nil {
+		b.httpClient.Transport = transport
 	}
-	return *tio
-}
 
-func NewNessusClient(accessKey string, secretKey string, nessusAddress string, port int, transport *http.Transport) NessusClient {
-	client := &http.Client{Transport: transport, Timeout: 10 * time.Second,}
-
-	nessus := &NessusClient{
-		client,
-		nessusAddress,
-		port,
-		accessKey,
-		secretKey,
+	sc := TenableSC{
+		baseClient: *b,
+		BaseURL:    fmt.Sprintf("https://%v/rest", scHost),
 	}
-	return *nessus
+	return sc
 }
 
-// Nessus Client Section
+func NewNessusClient(accessKey string, secretKey string, nessusAddress string, port int, transport *http.Transport) Nessus {
+	headers := &http.Header{}
+	headers.Set("X-ApiKeys", fmt.Sprintf("accessKey=%v; secretKey=%v;", accessKey, secretKey))
+	headers.Set("Content-Type", "application/json")
+	headers.Set("User-Agent", "GoTenable")
 
-type NessusClient struct {
-	client    *http.Client
-	address   string
-	port      int
-	accessKey string
-	secretKey string
+	b := &BaseClient{
+		&http.Client{},
+		headers}
+
+	if transport != nil {
+		b.httpClient.Transport = transport
+	}
+
+	nessus := Nessus{
+		baseClient: *b,
+		accessKey:  accessKey,
+		secretKey:  secretKey,
+		Address:    nessusAddress,
+		Port:       port,
+		BaseURL:    fmt.Sprintf("https://%v:%v", nessusAddress, port),
+	}
+	return nessus
 }
 
-func (tio *NessusClient) Do(req *http.Request) http.Response {
-	req.Header.Set("X-ApiKeys", fmt.Sprintf("accessKey=%v; secretKey=%v;", tio.accessKey, tio.secretKey))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "GoTenable")
-	log.Printf("Requesting \"%v\": %v\n", req.URL, req.Body)
-	resp, err := tio.client.Do(req)
+// Base Client Functions
+
+func (bc BaseClient) Get(baseURL string, endpoint string, params string) (*http.Response, error) {
+	var fullURL string
+	if params != "" {
+		fullURL = fmt.Sprintf("%v/%v?%v", baseURL, endpoint, params)
+	} else {
+		fullURL = fmt.Sprintf("%v/%v", baseURL, endpoint)
+	}
+
+	req, err := http.NewRequest("GET", fullURL, nil)
+	if err != nil {
+		log.Printf("Unable to build GET request \"%v\": %v\n", fullURL, err)
+		return nil, err
+	}
+
+	req.Header = *bc.headers
+
+	httpResp, err := bc.httpClient.Do(req)
 	if err != nil {
 		log.Printf("Unable to run request: %v\n", err)
+		return nil, err
 	}
-	log.Printf("Response Status [%v]", resp.Status)
-	return *resp
+	return httpResp, nil
 }
 
-func (nessus *NessusClient) NewRequest(method string, endpoint string, body []byte) *http.Request {
-	fullUrl := fmt.Sprintf("https://%v:%v/%v", nessus.address, nessus.port, endpoint)
-	req, err := http.NewRequest(method, fullUrl, bytes.NewBuffer(body))
+func (bc BaseClient) Post(baseURL string, endpoint string, body []byte) (*http.Response, error) {
+	fullUrl := fmt.Sprintf("%v/%v", baseURL, endpoint)
+	req, err := http.NewRequest("POST", fullUrl, bytes.NewBuffer(body))
 	if err != nil {
-		log.Printf("Unable to build request [%v] %v request\n", method, endpoint)
+		log.Printf("Unable to build POST request \"%v\": %v \n", fullUrl, err)
+		return nil, err
 	}
-	return req
-}
 
-// Tenable.sc Client Section
+	req.Header = *bc.headers
 
-type TenableSCClient struct {
-	client  *http.Client
-	baseURL string
-	user    string
-	token   int
-	session string
-}
-
-func (sc *TenableSCClient) NewRequest(method, endpoint string, body []byte) *http.Request {
-
-	fullURL := fmt.Sprintf("%v/%v", sc.baseURL, endpoint)
-
-	req, err := http.NewRequest(method, fullURL, bytes.NewBuffer(body))
+	resp, err := bc.httpClient.Do(req)
 	if err != nil {
-		return nil
+		log.Printf("Error while running request \"%v\": %v", fullUrl, err)
+		return nil, err
 	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	if sc.token != 0 {
-		req.Header.Set("X-SecurityCenter", fmt.Sprintf("%v", sc.token))
-		req.Header.Set("Cookie", fmt.Sprintf("TNS_SESSIONID=%v", sc.session))
-	}
-
-	return req
+	return resp, err
 }
 
-func (sc *TenableSCClient) Do(req *http.Request) *http.Response {
-	httpResp, err := sc.client.Do(req)
+func (bc BaseClient) Put(baseURL string, endpoint string, body []byte) (*http.Response, error) {
+	fullUrl := fmt.Sprintf("%v/%v", baseURL, endpoint)
+	req, err := http.NewRequest("PUT", fullUrl, bytes.NewBuffer(body))
 	if err != nil {
-		return nil
+		log.Printf("Unable to build PUT request \"%v\": %v \n", fullUrl, err)
+		return nil, err
 	}
-	return httpResp
+
+	req.Header = *bc.headers
+
+	resp, err := bc.httpClient.Do(req)
+	if err != nil {
+		log.Printf("Error while running request \"%v\": %v", fullUrl, err)
+		return nil, err
+	}
+	return resp, err
 }
 
-// Tenable.io Client Section
+func (bc BaseClient) Patch(baseURL string, endpoint string, body []byte) (*http.Response, error) {
+	fullUrl := fmt.Sprintf("%v/%v", baseURL, endpoint)
+	req, err := http.NewRequest("PATCH", fullUrl, bytes.NewBuffer(body))
+	if err != nil {
+		log.Printf("Unable to build PATCH request \"%v\": %v \n", fullUrl, err)
+		return nil, err
+	}
 
-type TenableIOClient struct {
-	client    *http.Client
-	basePath  string
-	accessKey string
-	secretKey string
+	req.Header = *bc.headers
+
+	resp, err := bc.httpClient.Do(req)
+	if err != nil {
+		log.Printf("Error while running request \"%v\": %v", fullUrl, err)
+		return nil, err
+	}
+	return resp, err
 }
 
-func (tio *TenableIOClient) Do(req *http.Request) http.Response {
-	req.Header.Set("X-ApiKeys", fmt.Sprintf("accessKey=%v; secretKey=%v;", tio.accessKey, tio.secretKey))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "GoTenable")
-	log.Printf("Requesting \"%v\": %v\n", req.URL, req.Body)
-	resp, err := tio.client.Do(req)
+func (bc BaseClient) Delete(baseURL string, endpoint string, params string) (*http.Response, error) {
+	var fullURL string
+	if params != "" {
+		fullURL = fmt.Sprintf("%v/%v?%v", baseURL, endpoint, params)
+	} else {
+		fullURL = fmt.Sprintf("%v/%v", baseURL, endpoint)
+	}
+
+	req, err := http.NewRequest("DELETE", fullURL, nil)
+	if err != nil {
+		log.Printf("Unable to build DELETE request \"%v\": %v\n", fullURL, err)
+		return nil, err
+	}
+
+	req.Header = *bc.headers
+
+	httpResp, err := bc.httpClient.Do(req)
 	if err != nil {
 		log.Printf("Unable to run request: %v\n", err)
+		return nil, err
 	}
-
-	return *resp
+	return httpResp, nil
 }
 
-func (tio *TenableIOClient) NewRequest(method string, endpoint string, body []byte) *http.Request {
-	fullUrl := fmt.Sprintf("%v/%v", tio.basePath, endpoint)
-	req, err := http.NewRequest(method, fullUrl, bytes.NewBuffer(body))
+// TenableIO Client Base Functions
+
+func (io TenableIO) Get(endpoint string, params string) (*http.Response, error) {
+	resp, err := io.baseClient.Get(io.BaseURL, endpoint, params)
 	if err != nil {
-		log.Printf("Unable to build request [%v] %v request\n", method, endpoint)
+		return nil, err
 	}
-	return req
+	return resp, nil
+}
+
+func (io TenableIO) Post(endpoint string, body []byte) (*http.Response, error) {
+	resp, err := io.baseClient.Post(io.BaseURL, endpoint, body)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (io TenableIO) Put(endpoint string, body []byte) (*http.Response, error) {
+	resp, err := io.baseClient.Post(io.BaseURL, endpoint, body)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (io TenableIO) Patch(endpoint string, body []byte) (*http.Response, error) {
+	resp, err := io.baseClient.Post(io.BaseURL, endpoint, body)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (io TenableIO) Delete(endpoint string, params string) (*http.Response, error) {
+	resp, err := io.baseClient.Get(io.BaseURL, endpoint, params)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+// TenableSC Client Base Functions
+
+func (sc TenableSC) Get(endpoint string, params string) (*http.Response, error) {
+	resp, err := sc.baseClient.Get(sc.BaseURL, endpoint, params)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (sc TenableSC) Post(endpoint string, body []byte) (*http.Response, error) {
+	resp, err := sc.baseClient.Post(sc.BaseURL, endpoint, body)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (sc TenableSC) Put(endpoint string, body []byte) (*http.Response, error) {
+	resp, err := sc.baseClient.Post(sc.BaseURL, endpoint, body)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (sc TenableSC) Patch(endpoint string, body []byte) (*http.Response, error) {
+	resp, err := sc.baseClient.Post(sc.BaseURL, endpoint, body)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (sc TenableSC) Delete(endpoint string, params string) (*http.Response, error) {
+	resp, err := sc.baseClient.Get(sc.BaseURL, endpoint, params)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+// Nessus Client Base Functions
+
+func (n Nessus) Get(endpoint string, params string) (*http.Response, error) {
+	resp, err := n.baseClient.Get(n.BaseURL, endpoint, params)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (n Nessus) Post(endpoint string, body []byte) (*http.Response, error) {
+	resp, err := n.baseClient.Post(n.BaseURL, endpoint, body)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (n Nessus) Put(endpoint string, body []byte) (*http.Response, error) {
+	resp, err := n.baseClient.Post(n.BaseURL, endpoint, body)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (n Nessus) Patch(endpoint string, body []byte) (*http.Response, error) {
+	resp, err := n.baseClient.Post(n.BaseURL, endpoint, body)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (n Nessus) Delete(endpoint string, params string) (*http.Response, error) {
+	resp, err := n.baseClient.Get(n.BaseURL, endpoint, params)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+// Structs
+
+type BaseClient struct {
+	httpClient *http.Client
+	headers    *http.Header
+}
+
+type TenableIO struct {
+	baseClient BaseClient
+	accessKey  string
+	secretKey  string
+	BaseURL    string
+}
+
+//
+type TenableSC struct {
+	baseClient BaseClient
+	User       string
+	token      int
+	session    string
+	BaseURL    string
+}
+
+type Nessus struct {
+	baseClient BaseClient
+	accessKey  string
+	secretKey  string
+	Address    string
+	Port       int
+	BaseURL    string
 }

@@ -8,21 +8,22 @@ import (
 	"time"
 )
 
-func (tio *TenableIOClient) ListEvents(filter EventFilter) ([]Event, IOError) {
-	const endpoint = "audit-log/v1/events"
-	req := tio.NewRequest("GET", endpoint, nil)
-	var funcError IOError
+func (io *TenableIO) ListEvents(filter EventFilter) ([]Event, error) {
 
+	var GetParams string
 	if filter != (EventFilter{}) {
-		GetParams := req.URL.Query()
 		filterString := fmt.Sprintf("%v.%v:%v", filter.Filter, filter.Operator, filter.Value)
-		GetParams.Add("f", filterString)
-		req.URL.RawQuery = GetParams.Encode()
+		GetParams = fmt.Sprintf("f=%v", filterString)
+	} else {
+		GetParams = ""
+	}
+	resp, err := io.Get("audit-log/v1/events", GetParams)
+	if err != nil {
+		log.Printf("Unable to request audit log events: %v\n", err)
+		return nil, err
 	}
 
-	// Request Logs
-	LogResponse := tio.Do(req)
-	ResponseBytes, _ := ioutil.ReadAll(LogResponse.Body)
+	ResponseBytes, _ := ioutil.ReadAll(resp.Body)
 	var Logs AuditLogResponse
 
 	// Unmarshal API response to AuditLogResponse struct
@@ -31,7 +32,7 @@ func (tio *TenableIOClient) ListEvents(filter EventFilter) ([]Event, IOError) {
 		log.Printf("Unable to unmarshal Audit Log Response: %v\n", responseError)
 	}
 
-	return Logs.Events, funcError
+	return Logs.Events, nil
 }
 
 type EventFilter struct {

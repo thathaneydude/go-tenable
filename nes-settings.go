@@ -7,16 +7,19 @@ import (
 	"log"
 )
 
-func (nessus *NessusClient) GetHealthStats(count int) ScannerSettingsResponse {
+func (n *Nessus) GetHealthStats(count int) ScannerSettingsResponse {
 	if count == 0 {
 		log.Printf("Zero is an invalid number of records to fetch. Setting to 1")
 	}
-	fullUrl := fmt.Sprintf("settings/health/stats?count=%v", count)
-	req := nessus.NewRequest("GET", fullUrl, nil)
-	resp := nessus.Do(req)
+
+	resp, err := n.Get("settings/health/stats", fmt.Sprintf("count=%v", count))
+	if err != nil {
+		log.Printf("Unable to fetch health stats for %v: %v", n.Address, err)
+
+	}
 	var healthResponse ScannerSettingsResponse
 	tmp, _ := ioutil.ReadAll(resp.Body)
-	err := json.Unmarshal(tmp, &healthResponse)
+	err = json.Unmarshal(tmp, &healthResponse)
 	if err != nil {
 		log.Printf("Unable to unmarshal Health Seetings Response: %v", err)
 	}

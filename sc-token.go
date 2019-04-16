@@ -2,20 +2,22 @@ package go_tenable
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"strings"
 )
 
-func (sc *TenableSCClient) Login(scUser string, scPassword string) {
-
-	// Make POST request to SC and store token returned in headers
-	payload, err := json.Marshal(&TokenRequest{Username: scUser, Password: scPassword})
-	if err != nil {
-		log.Printf("Unable to marshal login request: %v\n", err)
+func (sc *TenableSC) Login(scUser string, scPassword string) {
+	payload := TokenRequest{
+		scUser,
+		scPassword,
 	}
-	req := sc.NewRequest("POST", "token", payload)
-	resp := sc.Do(req)
+	resp, err := sc.Post("token", payload.ToBytes())
+	if err != nil {
+		log.Printf("Unable to request a new token: %v\n", err)
+	}
+
 	tmp, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("Unable to read response body: %v\n", err)
@@ -29,11 +31,16 @@ func (sc *TenableSCClient) Login(scUser string, scPassword string) {
 	sc.token = tokenResponse.Response.Token
 	sc.session = requestCookie
 
+	sc.baseClient.headers.Add("X-SecurityCenter", fmt.Sprintf("%v", sc.token))
+	sc.baseClient.headers.Add("Cookie", fmt.Sprintf("TNS_SESSIONID=%v", sc.session))
+
 }
 
-func (sc *TenableSCClient) Logout() {
-	req := sc.NewRequest("DELETE", "token", nil)
-	sc.Do(req)
+func (sc *TenableSC) Logout() {
+	_, err := sc.Delete("token", "")
+	if err != nil {
+		log.Printf("Unable to log out of Tenable.SC: %v\n", err)
+	}
 }
 
 type TokenRequest struct {
@@ -63,4 +70,12 @@ type TokenCookie struct {
 	Path     string `json:"path"`
 	Secure   bool   `json:"secure"`
 	Value    string `json:"value"`
+}
+
+func (req TokenRequest) ToBytes() []byte {
+	ret, err := json.Marshal(req)
+	if err != nil {
+		log.Printf("Unable to marshal token request body")
+	}
+	return ret
 }
