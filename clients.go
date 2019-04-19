@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
+
+var restrictedEndpoints = []string{"token"}
 
 // Creating a New Clients
 func NewTenableIOClient(accessKey string, secretKey string, transport *http.Transport) TenableIO {
@@ -83,7 +86,7 @@ func (bc BaseClient) Get(baseURL string, endpoint string, params string) (*http.
 	} else {
 		fullURL = fmt.Sprintf("%v/%v", baseURL, endpoint)
 	}
-
+	log.Printf("Requesting GET --> %v\n", fullURL)
 	req, err := http.NewRequest("GET", fullURL, nil)
 	if err != nil {
 		log.Printf("Unable to build GET request \"%v\": %v\n", fullURL, err)
@@ -102,6 +105,11 @@ func (bc BaseClient) Get(baseURL string, endpoint string, params string) (*http.
 
 func (bc BaseClient) Post(baseURL string, endpoint string, body []byte) (*http.Response, error) {
 	fullUrl := fmt.Sprintf("%v/%v", baseURL, endpoint)
+
+	if !stringInSlice(strings.ToLower(endpoint), restrictedEndpoints) {
+		log.Printf("Requesting POST --> %v : %v\n", fullUrl, string(body))
+	}
+
 	req, err := http.NewRequest("POST", fullUrl, bytes.NewBuffer(body))
 	if err != nil {
 		log.Printf("Unable to build POST request \"%v\": %v \n", fullUrl, err)
@@ -120,6 +128,7 @@ func (bc BaseClient) Post(baseURL string, endpoint string, body []byte) (*http.R
 
 func (bc BaseClient) Put(baseURL string, endpoint string, body []byte) (*http.Response, error) {
 	fullUrl := fmt.Sprintf("%v/%v", baseURL, endpoint)
+	log.Printf("Requesting PUT --> %v : %v\n", fullUrl, string(body))
 	req, err := http.NewRequest("PUT", fullUrl, bytes.NewBuffer(body))
 	if err != nil {
 		log.Printf("Unable to build PUT request \"%v\": %v \n", fullUrl, err)
@@ -138,6 +147,7 @@ func (bc BaseClient) Put(baseURL string, endpoint string, body []byte) (*http.Re
 
 func (bc BaseClient) Patch(baseURL string, endpoint string, body []byte) (*http.Response, error) {
 	fullUrl := fmt.Sprintf("%v/%v", baseURL, endpoint)
+	log.Printf("Requesting PATCH --> %v : %v\n", fullUrl, string(body))
 	req, err := http.NewRequest("PATCH", fullUrl, bytes.NewBuffer(body))
 	if err != nil {
 		log.Printf("Unable to build PATCH request \"%v\": %v \n", fullUrl, err)
@@ -161,7 +171,7 @@ func (bc BaseClient) Delete(baseURL string, endpoint string, params string) (*ht
 	} else {
 		fullURL = fmt.Sprintf("%v/%v", baseURL, endpoint)
 	}
-
+	log.Printf("Requesting DELETE --> %v\n", fullURL)
 	req, err := http.NewRequest("DELETE", fullURL, nil)
 	if err != nil {
 		log.Printf("Unable to build DELETE request \"%v\": %v\n", fullURL, err)
@@ -334,4 +344,13 @@ type Nessus struct {
 	Address    string
 	Port       int
 	BaseURL    string
+}
+
+func stringInSlice(str string, list []string) bool {
+	for _, v := range list {
+		if v == str {
+			return true
+		}
+	}
+	return false
 }
