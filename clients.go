@@ -197,7 +197,7 @@ func (io TenableIO) Post(endpoint string, body []byte) (*http.Response, error) {
 }
 
 func (io TenableIO) Put(endpoint string, body []byte) (*http.Response, error) {
-	resp, err := io.baseClient.Post(io.BaseURL, endpoint, body)
+	resp, err := io.baseClient.Put(io.BaseURL, endpoint, body)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +205,7 @@ func (io TenableIO) Put(endpoint string, body []byte) (*http.Response, error) {
 }
 
 func (io TenableIO) Patch(endpoint string, body []byte) (*http.Response, error) {
-	resp, err := io.baseClient.Post(io.BaseURL, endpoint, body)
+	resp, err := io.baseClient.Patch(io.BaseURL, endpoint, body)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +213,7 @@ func (io TenableIO) Patch(endpoint string, body []byte) (*http.Response, error) 
 }
 
 func (io TenableIO) Delete(endpoint string, params string) (*http.Response, error) {
-	resp, err := io.baseClient.Get(io.BaseURL, endpoint, params)
+	resp, err := io.baseClient.Delete(io.BaseURL, endpoint, params)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +239,7 @@ func (sc TenableSC) Post(endpoint string, body []byte) (*http.Response, error) {
 }
 
 func (sc TenableSC) Put(endpoint string, body []byte) (*http.Response, error) {
-	resp, err := sc.baseClient.Post(sc.BaseURL, endpoint, body)
+	resp, err := sc.baseClient.Put(sc.BaseURL, endpoint, body)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +247,7 @@ func (sc TenableSC) Put(endpoint string, body []byte) (*http.Response, error) {
 }
 
 func (sc TenableSC) Patch(endpoint string, body []byte) (*http.Response, error) {
-	resp, err := sc.baseClient.Post(sc.BaseURL, endpoint, body)
+	resp, err := sc.baseClient.Patch(sc.BaseURL, endpoint, body)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +255,7 @@ func (sc TenableSC) Patch(endpoint string, body []byte) (*http.Response, error) 
 }
 
 func (sc TenableSC) Delete(endpoint string, params string) (*http.Response, error) {
-	resp, err := sc.baseClient.Get(sc.BaseURL, endpoint, params)
+	resp, err := sc.baseClient.Delete(sc.BaseURL, endpoint, params)
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +281,7 @@ func (n Nessus) Post(endpoint string, body []byte) (*http.Response, error) {
 }
 
 func (n Nessus) Put(endpoint string, body []byte) (*http.Response, error) {
-	resp, err := n.baseClient.Post(n.BaseURL, endpoint, body)
+	resp, err := n.baseClient.Put(n.BaseURL, endpoint, body)
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +289,7 @@ func (n Nessus) Put(endpoint string, body []byte) (*http.Response, error) {
 }
 
 func (n Nessus) Patch(endpoint string, body []byte) (*http.Response, error) {
-	resp, err := n.baseClient.Post(n.BaseURL, endpoint, body)
+	resp, err := n.baseClient.Patch(n.BaseURL, endpoint, body)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +297,7 @@ func (n Nessus) Patch(endpoint string, body []byte) (*http.Response, error) {
 }
 
 func (n Nessus) Delete(endpoint string, params string) (*http.Response, error) {
-	resp, err := n.baseClient.Get(n.BaseURL, endpoint, params)
+	resp, err := n.baseClient.Delete(n.BaseURL, endpoint, params)
 	if err != nil {
 		return nil, err
 	}
