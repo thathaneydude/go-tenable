@@ -7,13 +7,12 @@ import (
 )
 
 func (sc *TenableSC) ListRiskAcceptanceRules() AcceptRiskRuleResponse {
-	var params = "id,repository,organization,User,plugin,hostType,hostValue,Port,protocol,expires,status,comments," +
-		"createdTime,modifiedTime"
+	var params = "fields=id,repository,organization,user,plugin,hostType,hostValue,port,protocol,expires,status," +
+		"comments,createdTime,modifiedTime"
 	resp, err := sc.Get("acceptRiskRule", params)
 	tmp, _ := ioutil.ReadAll(resp.Body)
 	var Rules = AcceptRiskRuleResponse{}
 	err = json.Unmarshal(tmp, &Rules)
-
 	if err != nil {
 		fmt.Printf("Unable to unmarshal Risk Acceptance Rules: %v\n", err)
 	}

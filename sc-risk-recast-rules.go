@@ -7,7 +7,7 @@ import (
 )
 
 func (sc *TenableSC) ListRiskRecastRules() RecastRiskRuleResponse {
-	var params = "id,repository,organization,User,plugin,newSeverity,hostType,hostValue,Port,protocol,order,status," +
+	var params = "fields=id,repository,organization,user,plugin,newSeverity,hostType,hostValue,port,protocol,order,status," +
 		"comments,createdTime,modifiedTime"
 
 	resp, err := sc.Get("recastRiskRule", params)
