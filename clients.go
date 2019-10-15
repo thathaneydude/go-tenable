@@ -2,7 +2,6 @@ package go_tenable
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -26,7 +25,6 @@ type TenableClient interface {
 type baseClient struct {
 	httpClient http.Client
 	headers    http.Header
-	transport http.Transport
 }
 
 type TenableIO struct {
@@ -54,28 +52,29 @@ type Nessus struct {
 }
 
 // Client Constructors
-func NewTenableIOClient(accessKey string, secretKey string) TenableIO {
+func NewTenableIOClient(accessKey string, secretKey string, transport http.Transport) TenableIO {
 	headers := http.Header{}
 	headers.Set("X-ApiKeys", fmt.Sprintf("accessKey=%v; secretKey=%v;", accessKey, secretKey))
 	headers.Set("Content-Type", "application/json")
 	headers.Set("User-Agent", "GoTenable")
 
-	b := newBaseClient(headers)
+	b := newBaseClient(headers, transport)
 
 	io := TenableIO{
 		b,
 		accessKey,
 		secretKey,
-		"https://cloud.tenable.com"}
+		"https://cloud.tenable.com",
+	}
 	return io
 }
 
-func NewTenableSCClient(scHost string) TenableSC {
+func NewTenableSCClient(scHost string, transport http.Transport) TenableSC {
 	headers := http.Header{}
 	headers.Set("Content-Type", "application/json")
 	headers.Set("User-Agent", "GoTenable")
 
-	b := newBaseClient(headers)
+	b := newBaseClient(headers, transport)
 
 	sc := TenableSC{
 		baseClient: b,
@@ -84,13 +83,13 @@ func NewTenableSCClient(scHost string) TenableSC {
 	return sc
 }
 
-func NewNessusClient(accessKey string, secretKey string, nessusAddress string, port int, transport *http.Transport) Nessus {
+func NewNessusClient(accessKey string, secretKey string, nessusAddress string, port int, transport http.Transport) Nessus {
 	headers := http.Header{}
 	headers.Set("X-ApiKeys", fmt.Sprintf("accessKey=%v; secretKey=%v;", accessKey, secretKey))
 	headers.Set("Content-Type", "application/json")
 	headers.Set("User-Agent", "GoTenable")
 
-	b := newBaseClient(headers)
+	b := newBaseClient(headers, transport)
 
 	nessus := Nessus{
 		baseClient: b,
@@ -103,15 +102,10 @@ func NewNessusClient(accessKey string, secretKey string, nessusAddress string, p
 	return nessus
 }
 
-func newBaseClient(headers http.Header) baseClient {
-	transport := http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-
+func newBaseClient(headers http.Header, transport http.Transport) baseClient {
 	b := baseClient{
-		http.Client{},
+		http.Client{Transport: &transport},
 		headers,
-		transport,
 	}
 	return b
 }
@@ -285,9 +279,9 @@ func (bc baseClient) Delete(baseURL string, endpoint string, params string) (map
 }
 
 // TenableIO Client Base Functions
-func (io TenableIO) SetTransport(transport http.Transport) {
-	io.baseClient.transport = transport
-}
+//func (io TenableIO) SetTransport(transport *http.Transport) {
+//	io.baseClient.transport = transport
+//}
 
 func (io TenableIO) Get(endpoint string, params string) (map[string]interface{}, error) {
 	resp, err := io.baseClient.Get(io.BaseURL, endpoint, params)

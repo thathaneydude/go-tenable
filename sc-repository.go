@@ -1,4 +1,5 @@
-//package go_tenable
+package go_tenable
+
 //
 //import (
 //	"encoding/json"
