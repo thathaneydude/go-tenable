@@ -79,6 +79,11 @@ func NewNessusClient(accessKey string, secretKey string, nessusAddress string, p
 
 // Base Client Functions
 
+func (bc BaseClient) AddHeader(header string, header_value string) {
+	bc.headers.Set(header, header_value)
+}
+
+
 func (bc BaseClient) Get(baseURL string, endpoint string, params string) (*http.Response, error) {
 	var fullURL string
 	if params != "" {
