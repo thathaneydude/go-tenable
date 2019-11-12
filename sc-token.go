@@ -31,8 +31,8 @@ func (sc *TenableSC) Login(scUser string, scPassword string) {
 	sc.token = tokenResponse.Response.Token
 	sc.session = requestCookie
 
-	sc.baseClient.headers.Add("X-SecurityCenter", fmt.Sprintf("%v", sc.token))
-	sc.baseClient.headers.Add("Cookie", fmt.Sprintf("TNS_SESSIONID=%v", sc.session))
+	sc.BaseClient.Headers.Add("X-SecurityCenter", fmt.Sprintf("%v", sc.token))
+	sc.BaseClient.Headers.Add("Cookie", fmt.Sprintf("TNS_SESSIONID=%v", sc.session))
 
 }
 
