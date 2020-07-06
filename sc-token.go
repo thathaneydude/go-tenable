@@ -10,6 +10,7 @@ import (
 
 // With the provided user name and password, attempts to create an authenticated session with Tenable.sc using the
 // token endpoint. The function needs to be executed prior to any other SC client request as it sets the token and
+// session cookie for requests.
 func (sc *TenableSC) Login(scUser string, scPassword string) (*TokenResponse, error) {
 	// Read in the SC username and password
 	payload := TokenRequest{
@@ -50,21 +51,25 @@ func (sc *TenableSC) Login(scUser string, scPassword string) (*TokenResponse, er
 	var tokenResponse = TokenResponse{}
 	err = json.Unmarshal(tmp, &tokenResponse)
 	if err != nil {
-		// If the response is unsuccessful attmpt to unmarshal to an error response
-		// log.Printf("Unable to unmarshal successful token request response: %v", err)
+		// If the response is unsuccessful attempts to unmarshal to an error response
 		tokenErrorResponse := TokenError{}
 		err = json.Unmarshal(tmp, &tokenErrorResponse)
 		if err != nil {
+			// if unable to unmarshal successful or error then the request and response are FUBAR
 			log.Printf("Unable to unmarshal error response either. %v", err)
 			return nil, err
 		}
-		return nil, errors.New(fmt.Sprintf("%v", tokenResponse.ErrorMsg))
+		return nil, errors.New(fmt.Sprintf("%v", tokenErrorResponse.ErrorMsg))
 	}
+
+	// At this point we should have a valid token and session cookie
 	sc.token = tokenResponse.Response.Token
 	sc.session = cookieFound
 
+	// Set the cookie session and token header on the client object
 	sc.BaseClient.Headers.Add("X-SecurityCenter", fmt.Sprintf("%v", sc.token))
 	sc.BaseClient.Headers.Add("Cookie", fmt.Sprintf("TNS_SESSIONID=%v", sc.session))
+
 	return &tokenResponse, nil
 }
 
