@@ -328,7 +328,6 @@ type TenableIO struct {
 	BaseURL    string
 }
 
-//
 type TenableSC struct {
 	BaseClient baseClient
 	User       string
